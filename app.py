@@ -24,7 +24,7 @@ def rotate(image, angle):
     return rotated_image
 
 def main():
-    st.title("Women's Clothing E-Commerce Dashboard")
+    st.title("Women's Clothing E-Commerce")
 
     # Sidebar
     st.sidebar.title("Options")
