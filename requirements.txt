@@ -4,6 +4,4 @@ numpy
 opencv-python-headless
 pillow
 plotly
-nltk
-string
-re
+
