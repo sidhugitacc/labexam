@@ -3,38 +3,49 @@ import pandas as pd
 import numpy as np
 import cv2
 from PIL import Image
+import plotly.express as px
+import nltk
+from nltk.tokenize import word_tokenize
+from nltk.corpus import stopwords
+from nltk.stem import PorterStemmer, WordNetLemmatizer
+import string
+import re
 
-# Load data
 @st.cache_data()
 def load_data():
     data = pd.read_csv("preprocessed_data.csv")
     return data
 
-# Image processing functions
 def grayscale(image):
     grayscale_image = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2GRAY)
     return grayscale_image
-
-def gaussian_blur(image, kernel_size=5):
-    blurred_image = cv2.GaussianBlur(np.array(image), (kernel_size, kernel_size), 0)
-    return blurred_image
 
 def rotate(image, angle):
     rotated_image = np.array(image.rotate(angle))
     return rotated_image
 
+def resize_image(image, width, height):
+    resized_image = image.resize((width, height))
+    return resized_image
+
+def crop_image(image, x, y, width, height):
+    cropped_image = image.crop((x, y, x + width, y + height))
+    return cropped_image
+
+
+
 def main():
     st.title("Women's Clothing E-Commerce")
 
-    # Sidebar
+ 
     st.sidebar.title("Options")
-    option = st.sidebar.selectbox("Select Option", ["Dashboard", "Image Processing"])
+    option = st.sidebar.selectbox("Select Option", ["3D Plot Visualisation", "Image Processing", "Text Similarity Analysis"])
 
-    if option == "Dashboard":
-        # Load data
+    if option == "3D Plot Visualisation":
+    
         data = load_data()
 
-        # Print loaded data
+
         st.write("Loaded Data:")
         st.write(data)
 
@@ -73,14 +84,9 @@ def main():
         st.write("### Filtered Data")
         st.write(filtered_data)
 
-        # Visualization (you can add more visualizations as needed)
-        st.subheader("Rating Distribution")
-        rating_counts = filtered_data["Rating"].value_counts()
-        st.bar_chart(rating_counts)
-
-        st.subheader("Recommended vs Not Recommended")
-        recommended_counts = filtered_data["Recommended IND"].value_counts()
-        st.bar_chart(recommended_counts)
+        st.subheader("3D Plot: Age, Rating, and Positive Feedback Count")
+        fig = px.scatter_3d(filtered_data, x='Age', y='Rating', z='Positive Feedback Count', color='Rating')
+        st.plotly_chart(fig)
 
     elif option == "Image Processing":
         # Image processing
@@ -97,20 +103,35 @@ def main():
                 grayscale_option = st.checkbox(f"Convert to Grayscale {i+1}", key=f"grayscale_{i}")
                 blur_option = st.checkbox(f"Apply Gaussian Blur {i+1}", key=f"blur_{i}")
                 rotation_option = st.checkbox(f"Rotate Image {i+1}", key=f"rotate_{i}")
+                resize_option = st.checkbox(f"Resize Image {i+1}", key=f"resize_{i}")
+                crop_option = st.checkbox(f"Crop Image {i+1}", key=f"crop_{i}")
+
+
 
                 if grayscale_option:
                     grayscale_image = grayscale(image)
                     st.image(grayscale_image, caption=f"Grayscale Image {i+1}", use_column_width=True)
 
-                if blur_option:
-                    kernel_size = st.slider(f"Select Kernel Size for Gaussian Blur {i+1}", 1, 31, 5, key=f"kernel_{i}")
-                    blurred_image = gaussian_blur(image, kernel_size)
-                    st.image(blurred_image, caption=f"Gaussian Blur (Kernel Size: {kernel_size}) Image {i+1}", use_column_width=True)
-
                 if rotation_option:
                     rotation_angle = st.slider(f"Select Rotation Angle (degrees) {i+1}", -180, 180, 0, key=f"angle_{i}")
                     rotated_image = rotate(image, rotation_angle)
                     st.image(rotated_image, caption=f"Rotated Image (Angle: {rotation_angle} degrees) Image {i+1}", use_column_width=True)
+                
+                if resize_option:
+                    new_width = st.slider(f"Select New Width {i+1}", 1, image.width, image.width, key=f"width_{i}")
+                    new_height = st.slider(f"Select New Height {i+1}", 1, image.height, image.height, key=f"height_{i}")
+                    resized_image = resize_image(image, new_width, new_height)
+                    st.image(resized_image, caption=f"Resized Image {i+1}", use_column_width=True)
+
+                if crop_option:
+                    crop_x = st.slider(f"Select X coordinate for cropping {i+1}", 0, image.width, 0, key=f"crop_x_{i}")
+                    crop_y = st.slider(f"Select Y coordinate for cropping {i+1}", 0, image.height, 0, key=f"crop_y_{i}")
+                    crop_width = st.slider(f"Select Width for cropping {i+1}", 1, image.width, image.width, key=f"crop_width_{i}")
+                    crop_height = st.slider(f"Select Height for cropping {i+1}", 1, image.height, image.height, key=f"crop_height_{i}")
+                    cropped_image = crop_image(image, crop_x, crop_y, crop_width, crop_height)
+                    st.image(cropped_image, caption=f"Cropped Image {i+1}", use_column_width=True)
+
+
 
 if __name__ == "__main__":
     main()
@@ -154,3 +175,4 @@ if __name__ == "__main__":
 
 # if __name__ == "__main__":
 #     main()
+
